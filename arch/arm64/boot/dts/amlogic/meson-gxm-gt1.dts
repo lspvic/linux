@@ -14,6 +14,11 @@
 	compatible = "azw,gt1", "amlogic,s912", "amlogic,meson-gxm";
 	model = "Beelink GT1";
 
+	aliases {
+		rtc0 = &rtc;
+		rtc1 = &vrtc;
+	};
+
 	leds {
 		compatible = "gpio-leds";
 
@@ -49,14 +54,22 @@
 };
 
 &external_mdio {
-	reset-assert-us = <10000>;
-	reset-deassert-us = <80000>;
-	reset-gpios = <&gpio GPIOZ_14 GPIO_ACTIVE_LOW>;
+	compatible = "snps,dwmac-mdio";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	snps,aal;
+	snps,txpbl = <0x8>;
+	snps,rxpbl = <0x8>;
 
 	external_phy: ethernet-phy@0 {
 		/* Realtek RTL8211F (0x001cc916) */
 		reg = <0>;
 		max-speed = <1000>;
+
+		reset-assert-us = <10000>;
+		reset-deassert-us = <80000>;
+		reset-gpios = <&gpio GPIOZ_14 GPIO_ACTIVE_LOW>;
+
 		interrupt-parent = <&gpio_intc>;
 		/* MAC_INTR on GPIOZ_15 */
 		interrupts = <25 IRQ_TYPE_LEVEL_LOW>;
@@ -65,6 +78,21 @@
 
 &ir {
 	linux,rc-map-name = "rc-beelink-gs1";
+};
+
+&i2c_B {
+	status = "okay";
+	pinctrl-0 = <&i2c_b_pins>;
+	pinctrl-names = "default";
+
+	rtc: rtc@51 {
+		compatible = "haoyu,hym8563";
+		reg = <0x51>;
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+		clock-output-names = "xin32k";
+		wakeup-source;
+	};
 };
 
 &sd_emmc_a {
