@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2016 Andreas Färber
+ * Copyright (c) 2016 BayLibre, Inc.
+ * Author: Kevin Hilman <khilman@kernel.org>
+ */
+
+/dts-v1/;
+
+#include "meson-gxbb-odroidc2.dts"
+
+/ {
+	pcm5102a: pcm5102a {
+		#sound-dai-cells = <0>;
+		compatible = "ti,pcm5102a";
+		pcm510x,format = "i2s";
+	};
+
+	sound {
+		dai-link-1 {
+			codec-1 {
+				sound-dai = <&pcm5102a>;
+			};
+		};
+	};
+};
+
+&aiu {
+	pinctrl-0 = <&i2s_am_clk_pins>, <&i2s_out_ao_clk_pins>,
+		    <&i2s_out_lr_clk_pins>, <&i2s_out_ch01_ao_pins>,
+		    <&spdif_out_y_pins>;
+};
