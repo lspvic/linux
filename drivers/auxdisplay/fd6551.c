@@ -350,7 +350,7 @@ static struct i2c_driver fd6551_driver = {
 		.name   = "fd6551",
 		.of_match_table = fd6551_of_matches,
 	},
-	.probe_new	= fd6551_probe,
+	.probe	= fd6551_probe,
 	.remove		= fd6551_remove,
 	.shutdown	= fd6551_shutdown,
 	.id_table	= fd6551_i2c_ids,
