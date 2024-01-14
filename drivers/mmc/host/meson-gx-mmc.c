@@ -88,6 +88,7 @@
 #define   STATUS_BUSY BIT(31)
 #define   STATUS_DESC_BUSY BIT(30)
 #define   STATUS_DATI GENMASK(23, 16)
+#define   STATUS_DAT1 BIT(17)
 
 #define SD_EMMC_IRQ_EN 0x4c
 #define   IRQ_RXD_ERR_MASK GENMASK(7, 0)
@@ -447,6 +448,12 @@ static int meson_mmc_clk_init(struct meson_host *host)
 		if (IS_ERR(clk))
 			return dev_err_probe(host->dev, PTR_ERR(clk),
 					     "Missing clock %s\n", name);
+
+		/* clkin0 hierarchy includes dividers and muxes, and bootloader
+		 * may have left whatever settings. Set to XTAL rate.
+		 */
+		if (i == 0)
+			clk_set_rate(clk, 24000000);
 
 		mux_parent_names[i] = __clk_get_name(clk);
 	}

@@ -204,6 +204,9 @@ static int i2c_inb(struct i2c_adapter *i2c_adap)
 	unsigned char indata = 0;
 	struct i2c_algo_bit_data *adap = i2c_adap->algo_data;
 
+	if (!adap->getsda)
+		return -EOPNOTSUPP;
+
 	/* assert: scl is low */
 	sdahi(adap);
 	for (i = 0; i < 8; i++) {
@@ -232,6 +235,10 @@ static int test_bus(struct i2c_adapter *i2c_adap)
 	struct i2c_algo_bit_data *adap = i2c_adap->algo_data;
 	const char *name = i2c_adap->name;
 	int scl, sda, ret;
+
+	/* Testing not possible if both pins are write-only. */
+	if (adap->getscl == NULL && adap->getsda == NULL)
+		return 0;
 
 	if (adap->pre_xfer) {
 		ret = adap->pre_xfer(i2c_adap);

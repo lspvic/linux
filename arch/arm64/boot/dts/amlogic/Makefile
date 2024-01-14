@@ -89,3 +89,6 @@ dtb-$(CONFIG_ARCH_MESON) += meson-gxbb-odroidc2-hifishield.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-gxl-s905l-p261.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-gxl-s905l-p271.dtb
 dtb-$(CONFIG_ARCH_MESON) += meson-gxl-s905l-venz-v10.dtb
+dtb-$(CONFIG_ARCH_MESON) += meson-sc2-s905x4-ah212.dtb
+dtb-$(CONFIG_ARCH_MESON) += meson-sc2-s905x4-ah212-gbit-2g.dtb
+dtb-$(CONFIG_ARCH_MESON) += meson-sc2-s905x4-ah212-gbit-4g.dtb
