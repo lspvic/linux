@@ -134,6 +134,14 @@ static int meson_pwm_request(struct pwm_chip *chip, struct pwm_device *pwm)
 			dev_err(dev, "failed to set pwm clock rate\n");
 			return err;
 		}
+	} else if (channel->clk_parent) {
+		err = clk_set_parent(channel->clk, channel->clk_parent);
+		if (err < 0) {
+			dev_err(dev, "failed to set parent %s for %s: %d\n",
+				__clk_get_name(channel->clk_parent),
+				__clk_get_name(channel->clk), err);
+			return err;
+		}
 	}
 
 	err = clk_prepare_enable(channel->clk);
