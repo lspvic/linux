@@ -28,7 +28,6 @@
 			compatible = "arm,cortex-a55";
 			reg = <0x0 0x0>;
 			enable-method = "psci";
-			cpu-idle-states = <&CPU_SLEEP_0 &SYSTEM_SLEEP_0>;
 			next-level-cache = <&l2>;
 			dynamic-power-coefficient = <230>;
 			#cooling-cells = <2>;
@@ -57,7 +56,6 @@
 			compatible = "arm,cortex-a55";
 			reg = <0x0 0x1>;
 			enable-method = "psci";
-			cpu-idle-states = <&CPU_SLEEP_0 &SYSTEM_SLEEP_0>;
 			next-level-cache = <&l2>;
 			dynamic-power-coefficient = <230>;
 			#cooling-cells = <2>;
@@ -86,7 +84,6 @@
 			compatible = "arm,cortex-a55";
 			reg = <0x0 0x2>;
 			enable-method = "psci";
-			cpu-idle-states = <&CPU_SLEEP_0 &SYSTEM_SLEEP_0>;
 			next-level-cache = <&l2>;
 			dynamic-power-coefficient = <230>;
 			#cooling-cells = <2>;
@@ -115,7 +112,6 @@
 			compatible = "arm,cortex-a55";
 			reg = <0x0 0x3>;
 			enable-method = "psci";
-			cpu-idle-states = <&CPU_SLEEP_0 &SYSTEM_SLEEP_0>;
 			next-level-cache = <&l2>;
 			dynamic-power-coefficient = <230>;
 			#cooling-cells = <2>;
@@ -137,25 +133,6 @@
 			cpu-supply = <&vddcpu0>;
 			voltage-tolerance = <0>;
 			clock-latency = <50000>;
-		};
-
-		idle-states {
-			entry-method = "arm,psci-0.2";
-			CPU_SLEEP_0: cpu-sleep-0 {
-					compatible = "arm,idle-state";
-					arm,psci-suspend-param = <0x0010000>;
-					local-timer-stop;
-					entry-latency-us = <4000>;
-					exit-latency-us = <5000>;
-					min-residency-us = <10000>;
-			};
-			SYSTEM_SLEEP_0: system-sleep-0 {
-					compatible = "arm,idle-state";
-					arm,psci-suspend-param = <0x0000000>;
-					entry-latency-us = <0x3fffffff>;
-					exit-latency-us = <0x40000000>;
-					min-residency-us = <0xffffffff>;
-			};
 		};
 
 		l2: l2-cache0 {
