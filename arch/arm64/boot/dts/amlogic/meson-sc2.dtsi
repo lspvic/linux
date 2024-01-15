@@ -28,6 +28,7 @@
 			compatible = "arm,cortex-a55";
 			reg = <0x0 0x0>;
 			enable-method = "psci";
+			cpu-idle-states = <&CPU_SLEEP_0 &SYSTEM_SLEEP_0>;
 			next-level-cache = <&l2>;
 			dynamic-power-coefficient = <230>;
 			#cooling-cells = <2>;
@@ -41,7 +42,11 @@
 				"high_freq_clk_parent",
 				"dsu_clk",
 				"dsu_pre_parent";
-			operating-points-v2 = <&cpu_opp_table0>;
+			multi_tables_available;
+			operating-points-v2 = <&cpu_opp_table0>,
+				<&cpu_opp_table1>,
+				<&cpu_opp_table2>,
+				<&cpu_opp_table3>;
 			cpu-supply = <&vddcpu0>;
 			voltage-tolerance = <0>;
 			clock-latency = <50000>;
@@ -52,6 +57,7 @@
 			compatible = "arm,cortex-a55";
 			reg = <0x0 0x1>;
 			enable-method = "psci";
+			cpu-idle-states = <&CPU_SLEEP_0 &SYSTEM_SLEEP_0>;
 			next-level-cache = <&l2>;
 			dynamic-power-coefficient = <230>;
 			#cooling-cells = <2>;
@@ -65,7 +71,11 @@
 				"high_freq_clk_parent",
 				"dsu_clk",
 				"dsu_pre_parent";
-			operating-points-v2 = <&cpu_opp_table0>;
+			multi_tables_available;
+			operating-points-v2 = <&cpu_opp_table0>,
+				<&cpu_opp_table1>,
+				<&cpu_opp_table2>,
+				<&cpu_opp_table3>;
 			cpu-supply = <&vddcpu0>;
 			voltage-tolerance = <0>;
 			clock-latency = <50000>;
@@ -76,6 +86,7 @@
 			compatible = "arm,cortex-a55";
 			reg = <0x0 0x2>;
 			enable-method = "psci";
+			cpu-idle-states = <&CPU_SLEEP_0 &SYSTEM_SLEEP_0>;
 			next-level-cache = <&l2>;
 			dynamic-power-coefficient = <230>;
 			#cooling-cells = <2>;
@@ -89,7 +100,11 @@
 				"high_freq_clk_parent",
 				"dsu_clk",
 				"dsu_pre_parent";
-			operating-points-v2 = <&cpu_opp_table0>;
+			multi_tables_available;
+			operating-points-v2 = <&cpu_opp_table0>,
+				<&cpu_opp_table1>,
+				<&cpu_opp_table2>,
+				<&cpu_opp_table3>;
 			cpu-supply = <&vddcpu0>;
 			voltage-tolerance = <0>;
 			clock-latency = <50000>;
@@ -100,6 +115,7 @@
 			compatible = "arm,cortex-a55";
 			reg = <0x0 0x3>;
 			enable-method = "psci";
+			cpu-idle-states = <&CPU_SLEEP_0 &SYSTEM_SLEEP_0>;
 			next-level-cache = <&l2>;
 			dynamic-power-coefficient = <230>;
 			#cooling-cells = <2>;
@@ -113,10 +129,33 @@
 				"high_freq_clk_parent",
 				"dsu_clk",
 				"dsu_pre_parent";
-			operating-points-v2 = <&cpu_opp_table0>;
+			omulti_tables_available;
+			operating-points-v2 = <&cpu_opp_table0>,
+				<&cpu_opp_table1>,
+				<&cpu_opp_table2>,
+				<&cpu_opp_table3>;
 			cpu-supply = <&vddcpu0>;
 			voltage-tolerance = <0>;
 			clock-latency = <50000>;
+		};
+
+		idle-states {
+			entry-method = "arm,psci-0.2";
+			CPU_SLEEP_0: cpu-sleep-0 {
+					compatible = "arm,idle-state";
+					arm,psci-suspend-param = <0x0010000>;
+					local-timer-stop;
+					entry-latency-us = <4000>;
+					exit-latency-us = <5000>;
+					min-residency-us = <10000>;
+			};
+			SYSTEM_SLEEP_0: system-sleep-0 {
+					compatible = "arm,idle-state";
+					arm,psci-suspend-param = <0x0000000>;
+					entry-latency-us = <0x3fffffff>;
+					exit-latency-us = <0x40000000>;
+					min-residency-us = <0xffffffff>;
+			};
 		};
 
 		l2: l2-cache0 {
@@ -163,6 +202,63 @@
 
 	psci {
 		compatible = "arm,psci-0.2";
+		method = "smc";
+	};
+
+	meson_suspend:pm {
+		compatible = "amlogic, pm";
+		status = "okay";
+		device_name = "aml_pm";
+		extend_resume_reason;
+		reg = <0x0 0xfe010288 0x0 0x4>, /*SYSCTRL_STATUS_REG2*/
+			<0x0 0xfe0102dc 0x0 0x4>; /*SYSCTRL_STICKY_REG7*/
+	};
+
+	cpu_info {
+		compatible = "amlogic, cpuinfo";
+		status = "okay";
+		cpuinfo_cmd = <0x82000044>;
+	};
+
+	soc_info {
+		compatible = "amlogic, socdata";
+		reg= <0x0 0xfe010000 0x0 0x8>,
+			<0x0 0xfe010180 0x0 0x4>,
+			<0x0 0xfe440070 0x0 0x4>;
+		read_nocsdata_cmd =<0x82000039>;
+		write_nocsdata_cmd=<0x82000038>;
+		auth_reg_ops_cmd=<0x820000f0>;
+	};
+
+	aml_reboot {
+		compatible = "aml, reboot";
+		sys_reset = <0x84000009>;
+		sys_poweroff = <0x84000008>;
+		dis_nb_cpus_in_shutdown;
+		extend_reboot_reason; /* Support up to 128 reboot reasons*/
+		reg = <0x0 0xfe01037c 0x0 0x4>; /* SEC_AO_SEC_SD_CFG15 */
+		status = "okay";
+	};
+
+	ram-dump {
+		compatible = "amlogic, ram_dump";
+		status = "okay";
+		reg = <0x0 0xFE0102D8 0x0 4>;
+		reg-names = "SYSCTRL_STICKY_REG6";
+		store_device = "data";
+	};
+
+	secmon {
+		compatible = "amlogic, secmon";
+		memory-region = <&secmon_reserved>;
+		in_base_func = <0x82000020>;
+		out_base_func = <0x82000021>;
+		inout_size_func = <0x8200002a>;
+		reserve_mem_size = <0x03300000>;
+	};
+
+	optee {
+		compatible = "linaro,optee-tz";
 		method = "smc";
 	};
 
@@ -226,6 +322,419 @@
 				<699000 98>,
 				<689000 100>;
 		status = "disabled";
+	};
+
+	cpu_opp_table0: cpu_opp_table0 {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp00 {
+			opp-hz = /bits/ 64 <100000000>;
+			opp-microvolt = <779000>;
+		};
+		opp01 {
+			opp-hz = /bits/ 64 <250000000>;
+			opp-microvolt = <779000>;
+		};
+		opp02 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <779000>;
+		};
+		opp03 {
+			opp-hz = /bits/ 64 <666000000>;
+			opp-microvolt = <779000>;
+		};
+		opp04 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <779000>;
+		};
+		opp05 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <809000>;
+		};
+		opp06 {
+			opp-hz = /bits/ 64 <1404000000>;
+			opp-microvolt = <839000>;
+		};
+		opp07 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <849000>;
+		};
+		opp08 {
+			opp-hz = /bits/ 64 <1608000000>;
+			opp-microvolt = <879000>;
+		};
+		opp09 {
+			opp-hz = /bits/ 64 <1704000000>;
+			opp-microvolt = <919000>;
+		};
+		opp10 {
+			opp-hz = /bits/ 64 <1800000000>;
+			opp-microvolt = <959000>;
+		};
+		opp11 {
+			opp-hz = /bits/ 64 <1908000000>;
+			opp-microvolt = <989000>;
+		};
+		opp12 {
+			opp-hz = /bits/ 64 <2004000000>;
+			opp-microvolt = <1009000>;
+		};
+	};
+
+	cpu_opp_table1: cpu_opp_table1 {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp00 {
+			opp-hz = /bits/ 64 <100000000>;
+			opp-microvolt = <779000>;
+		};
+		opp01 {
+			opp-hz = /bits/ 64 <250000000>;
+			opp-microvolt = <779000>;
+		};
+		opp02 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <779000>;
+		};
+		opp03 {
+			opp-hz = /bits/ 64 <666000000>;
+			opp-microvolt = <779000>;
+		};
+		opp04 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <779000>;
+		};
+		opp05 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <809000>;
+		};
+		opp06 {
+			opp-hz = /bits/ 64 <1404000000>;
+			opp-microvolt = <839000>;
+		};
+		opp07 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <849000>;
+		};
+		opp08 {
+			opp-hz = /bits/ 64 <1608000000>;
+			opp-microvolt = <879000>;
+		};
+		opp09 {
+			opp-hz = /bits/ 64 <1704000000>;
+			opp-microvolt = <919000>;
+		};
+		opp10 {
+			opp-hz = /bits/ 64 <1800000000>;
+			opp-microvolt = <959000>;
+		};
+		opp11 {
+			opp-hz = /bits/ 64 <1908000000>;
+			opp-microvolt = <989000>;
+		};
+		opp12 {
+			opp-hz = /bits/ 64 <2004000000>;
+			opp-microvolt = <1009000>;
+		};
+	};
+
+	cpu_opp_table2: cpu_opp_table2 {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp00 {
+			opp-hz = /bits/ 64 <100000000>;
+			opp-microvolt = <749000>;
+		};
+		opp01 {
+			opp-hz = /bits/ 64 <250000000>;
+			opp-microvolt = <749000>;
+		};
+		opp02 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <749000>;
+		};
+		opp03 {
+			opp-hz = /bits/ 64 <666000000>;
+			opp-microvolt = <749000>;
+		};
+		opp04 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <749000>;
+		};
+		opp05 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <769000>;
+		};
+		opp06 {
+			opp-hz = /bits/ 64 <1404000000>;
+			opp-microvolt = <809000>;
+		};
+		opp07 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <819000>;
+		};
+		opp08 {
+			opp-hz = /bits/ 64 <1608000000>;
+			opp-microvolt = <849000>;
+		};
+		opp09 {
+			opp-hz = /bits/ 64 <1704000000>;
+			opp-microvolt = <879000>;
+		};
+		opp10 {
+			opp-hz = /bits/ 64 <1800000000>;
+			opp-microvolt = <919000>;
+		};
+		opp11 {
+			opp-hz = /bits/ 64 <1908000000>;
+			opp-microvolt = <959000>;
+		};
+		opp12 {
+			opp-hz = /bits/ 64 <2004000000>;
+			opp-microvolt = <999000>;
+		};
+	};
+
+	cpu_opp_table3: cpu_opp_table3 {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp00 {
+			opp-hz = /bits/ 64 <100000000>;
+			opp-microvolt = <719000>;
+		};
+		opp01 {
+			opp-hz = /bits/ 64 <250000000>;
+			opp-microvolt = <719000>;
+		};
+		opp02 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <719000>;
+		};
+		opp03 {
+			opp-hz = /bits/ 64 <666000000>;
+			opp-microvolt = <719000>;
+		};
+		opp04 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <719000>;
+		};
+		opp05 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <759000>;
+		};
+		opp06 {
+			opp-hz = /bits/ 64 <1404000000>;
+			opp-microvolt = <779000>;
+		};
+		opp07 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <819000>;
+		};
+		opp08 {
+			opp-hz = /bits/ 64 <1608000000>;
+			opp-microvolt = <829000>;
+		};
+		opp09 {
+			opp-hz = /bits/ 64 <1704000000>;
+			opp-microvolt = <839000>;
+		};
+		opp10 {
+			opp-hz = /bits/ 64 <1800000000>;
+			opp-microvolt = <859000>;
+		};
+		opp11 {
+			opp-hz = /bits/ 64 <1908000000>;
+			opp-microvolt = <889000>;
+		};
+		opp12 {
+			opp-hz = /bits/ 64 <2004000000>;
+			opp-microvolt = <959000>;
+		};
+	};
+
+	cpu_opp_table0_c2l: cpu_opp_table0_c2l {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp00 {
+			opp-hz = /bits/ 64 <100000000>;
+			opp-microvolt = <779000>;
+		};
+		opp01 {
+			opp-hz = /bits/ 64 <250000000>;
+			opp-microvolt = <779000>;
+		};
+		opp02 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <779000>;
+		};
+		opp03 {
+			opp-hz = /bits/ 64 <667000000>;
+			opp-microvolt = <779000>;
+		};
+		opp04 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <779000>;
+		};
+		opp05 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <809000>;
+		};
+		opp06 {
+			opp-hz = /bits/ 64 <1404000000>;
+			opp-microvolt = <839000>;
+		};
+		opp07 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <849000>;
+		};
+		opp08 {
+			opp-hz = /bits/ 64 <1608000000>;
+			opp-microvolt = <879000>;
+		};
+	};
+
+	cpu_opp_table1_c2l: cpu_opp_table1_c2l {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp00 {
+			opp-hz = /bits/ 64 <100000000>;
+			opp-microvolt = <779000>;
+		};
+		opp01 {
+			opp-hz = /bits/ 64 <250000000>;
+			opp-microvolt = <779000>;
+		};
+		opp02 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <779000>;
+		};
+		opp03 {
+			opp-hz = /bits/ 64 <667000000>;
+			opp-microvolt = <779000>;
+		};
+		opp04 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <779000>;
+		};
+		opp05 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <809000>;
+		};
+		opp06 {
+			opp-hz = /bits/ 64 <1404000000>;
+			opp-microvolt = <839000>;
+		};
+		opp07 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <849000>;
+		};
+		opp08 {
+			opp-hz = /bits/ 64 <1608000000>;
+			opp-microvolt = <879000>;
+		};
+	};
+
+	cpu_opp_table2_c2l: cpu_opp_table2_c2l {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp00 {
+			opp-hz = /bits/ 64 <100000000>;
+			opp-microvolt = <749000>;
+		};
+		opp01 {
+			opp-hz = /bits/ 64 <250000000>;
+			opp-microvolt = <749000>;
+		};
+		opp02 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <749000>;
+		};
+		opp03 {
+			opp-hz = /bits/ 64 <667000000>;
+			opp-microvolt = <749000>;
+		};
+		opp04 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <749000>;
+		};
+		opp05 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <769000>;
+		};
+		opp06 {
+			opp-hz = /bits/ 64 <1404000000>;
+			opp-microvolt = <809000>;
+		};
+		opp07 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <819000>;
+		};
+		opp08 {
+			opp-hz = /bits/ 64 <1608000000>;
+			opp-microvolt = <849000>;
+		};
+	};
+
+	cpu_opp_table3_c2l: cpu_opp_table3_c2l {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp00 {
+			opp-hz = /bits/ 64 <100000000>;
+			opp-microvolt = <719000>;
+		};
+		opp01 {
+			opp-hz = /bits/ 64 <250000000>;
+			opp-microvolt = <719000>;
+		};
+		opp02 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <719000>;
+		};
+		opp03 {
+			opp-hz = /bits/ 64 <667000000>;
+			opp-microvolt = <719000>;
+		};
+		opp04 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <719000>;
+		};
+		opp05 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <759000>;
+		};
+		opp06 {
+			opp-hz = /bits/ 64 <1404000000>;
+			opp-microvolt = <779000>;
+		};
+		opp07 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <819000>;
+		};
+		opp08 {
+			opp-hz = /bits/ 64 <1608000000>;
+			opp-microvolt = <829000>;
+		};
+	};
+
+	cpufreq-meson {
+		compatible = "amlogic, cpufreq-meson";
+		status = "okay";
 	};
 
 	saradc: saradc@fe026000 {
@@ -456,6 +965,8 @@
 				mdio-parent-bus = <&mdio0>;
 				#address-cells = <1>;
 				#size-cells = <0>;
+				enet_type = <5>;
+				tx_amp_src = <0xFE010330>;
 
 				ext_mdio: mdio@0 {
 					reg = <0>;
@@ -489,37 +1000,72 @@
 				reg=<0x0 0x10220 0x0 0x140>;
 				amlogic,has-chip-id;
 			};
+		};
 
-			usb2_phy0: phy@3c000 {
-				compatible = "amlogic,g12a-usb2-phy";
-				reg = <0x0 0x3c000 0x0 0x2000>;
-				clocks = <&xtal>;
-				clock-names = "xtal";
-				resets = <&reset RESET_USBPHY20>;
-				reset-names = "phy";
-				#phy-cells = <0>;
-			};
+		usb2_phy_v2: usb2phy@fe03a000 {
+			compatible = "amlogic,amlogic-new-usb2-v2";
+			status = "disable";
+			#phy-cells = <0>;
+			reg = <0x0 0xfe03a000 0x0 0x80
+					0x0 0xFE002000 0x0 0x100
+					0x0 0xfe03c000 0x0 0x2000
+					0x0 0xfe03e000 0x0 0x2000>;
+			pll-setting-1 = <0x09400414>;
+			pll-setting-2 = <0x927E0000>;
+			pll-setting-3 = <0xac5f69e5>;
+			pll-setting-4 = <0xfe18>;
+			pll-setting-5 = <0x8000fff>;
+			pll-setting-6 = <0x78000>;
+			pll-setting-7 = <0xe0004>;
+			pll-setting-8 = <0xe000c>;
+			version = <2>;
+			phy20-reset-level-bit = <8>;
+			phy21-reset-level-bit = <9>;
+			usb-reset-bit = <4>;
+			reset-level = <0x40>;
+		};
 
-			usb2_phy1: phy@3e000 {
-				compatible = "amlogic,g12a-usb2-phy";
-				reg = <0x0 0x3e000 0x0 0x2000>;
-				clocks = <&xtal>;
-				clock-names = "xtal";
-				resets = <&reset RESET_USBPHY21>;
-				reset-names = "phy";
-				#phy-cells = <0>;
-			};
+		usb3_phy_v2: usb3phy@fe03a080 {
+			compatible = "amlogic,amlogic-new-usb3-v2";
+			status = "disable";
+			#phy-cells = <0>;
+			reg = <0x0 0xfe03a080 0x0 0x20
+				0x0 0xfe002000 0x0 0x100>;
+			phy-reg = <0xfe02a000>;
+			phy-reg-size = <0x2000>;
+			usb2-phy-reg = <0xfe03a000>;
+			usb2-phy-reg-size = <0x80>;
+			clocks = <&clkc CLKID_PCIE_PLL
+				&clkc CLKID_PCIE_BGP>;
+			clock-names = "pcie_refpll",
+					"pcie_bgp";
+			interrupts = <0 129 4>;
+		};
 
-			usb3_pcie_phy: phy@2a000 {
-				compatible = "amlogic,g12a-usb3-pcie-phy";
-				reg = <0x0 0x2a000 0x0 0x2000>;
-				clocks = <&clkc CLKID_PCIE_PLL>;
-				clock-names = "ref_clk";
-				resets = <&reset RESET_PCIE_PHY>;
-				reset-names = "phy";
-				assigned-clocks = <&clkc CLKID_PCIE_PLL>;
-				assigned-clock-rates = <100000000>;
-				#phy-cells = <1>;
+		usb0: usb@fde00000 {
+			compatible = "amlogic,meson-g12a-dwc3";
+			status = "disable";
+			#address-cells = <2>;
+			#size-cells = <2>;
+			ranges;
+
+			clocks = <&clkc CLKID_USB>;
+			clock-names = "usb_general";
+
+			dwc3: dwc3@fde00000 {
+				compatible = "snps,dwc3";
+				reg = <0x0 0xfde00000 0x0 0x100000>;
+				interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
+				dr_mode = "host";
+				maximum-speed = "high-speed";
+				snps,dis_u2_susphy_quirk;
+				snps,quirk-frame-length-adjustment;
+				usb-phy = <&usb2_phy_v2>, <&usb3_phy_v2>;
+				clocks = <&clkc CLKID_USB>;
+				clock-names = "usb_general";
+				/*usb5v-supply = <&ao_5v>;*/
+				/*usb3v3-supply = <&vddao_3v3>;*/
+				/*usb1v8-supply = <&vddio_ao1v8>;*/
 			};
 		};
 
@@ -557,49 +1103,6 @@
 			clock-names = "core", "clkin0", "clkin1";
 			cap-sdio-irq;
 			keep-power-in-suspend;
-		};
-
-		usb: usb@fe03a000 {
-			status = "disabled";
-			compatible = "amlogic,meson-g12a-usb-ctrl";
-			reg = <0x0 0xfe03a000 0x0 0xa0>;
-			interrupts = <GIC_SPI 16 IRQ_TYPE_LEVEL_HIGH>;
-			#address-cells = <2>;
-			#size-cells = <2>;
-			ranges;
-
-			clocks = <&clkc CLKID_USB>;
-			resets = <&reset RESET_USBCTRL>;
-
-			dr_mode = "host";
-
-			phys = <&usb2_phy0>, <&usb2_phy1>,
-			       <&usb3_pcie_phy PHY_TYPE_USB3>;
-			phy-names = "usb2-phy0", "usb2-phy1", "usb3-phy0";
-
-			dwc2: usb@fdd00000 {
-				compatible = "amlogic,meson-g12a-usb", "snps,dwc2";
-				reg = <0x0 0xfdd00000 0x0 0x100000>;
-				interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
-				clocks = <&clkc CLKID_USB1_TO_DDR>;
-				clock-names = "otg";
-				phys = <&usb2_phy1>;
-				phy-names = "usb2-phy";
-				dr_mode = "peripheral";
-				g-rx-fifo-size = <192>;
-				g-np-tx-fifo-size = <128>;
-				g-tx-fifo-size = <128 128 16 16 16>;
-			};
-
-			dwc3: usb@fde00000 {
-				compatible = "snps,dwc3";
-				reg = <0x0 0xfde00000 0x0 0x100000>;
-				interrupts = <GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>;
-				dr_mode = "host";
-				snps,dis_u2_susphy_quirk;
-				snps,quirk-frame-length-adjustment = <0x20>;
-				snps,parkmode-disable-ss-quirk;
-			};
 		};
 
 		ethmac: ethernet@fdc00000 {
@@ -681,19 +1184,6 @@
 		version = <2>;
 	};
 
-	wifi_pwm_conf:wifi_pwm_conf {
-		pwm_channel1_conf {
-			pwms = <&pwm_ef 0 30550 0>;
-			duty-cycle = <15270>;
-			times = <8>;
-		};
-		pwm_channel2_conf {
-			pwms = <&pwm_ef 2 30500 0>;
-			duty-cycle = <15250>;
-			times = <12>;
-		};
-	};
-
 	thermal-zones {
 		cpu_thermal: cpu-thermal {
 			polling-delay = <1000>;
@@ -741,6 +1231,86 @@
 			};
 		};
 	};
+
+	ge2d {
+		compatible = "amlogic, ge2d-sc2";
+		status = "okay";
+		interrupts = <GIC_SPI 217 IRQ_TYPE_EDGE_RISING>;
+		interrupt-names = "ge2d";
+		clocks = <&clkc CLKID_VAPB>,
+			<&clkc CLKID_G2D>,
+			<&clkc CLKID_GE2D>;
+		clock-names = "clk_vapb_0",
+			"clk_ge2d",
+			"clk_ge2d_gate";
+		reg = <0x0 0xff040000 0x0 0x100>;
+		power-domains = <&pwrdm PDID_SC2_GE2D>;
+	};
+
+	aml_bt: aml_bt {
+		compatible = "amlogic, aml-bt";
+		status = "okay";
+		bt_en-gpios = <&gpio    GPIOX_17 GPIO_ACTIVE_HIGH>;
+	};
+
+	aml_wifi: aml_wifi {
+		compatible = "amlogic, aml-wifi";
+		status = "disabled";
+		irq_trigger_type = "GPIO_IRQ_LOW";
+		dhd_static_buf;  /* if use bcm wifi, config dhd_static_buf */
+		//pinctrl-0 = <&pwm_e_pins>;
+		//pinctrl-names = "default";
+		pwm_config = <&wifi_pwm_conf>;
+	};
+
+	wifi_pwm_conf:wifi_pwm_conf {
+		pwm_channel1_conf {
+			pwms = <&pwm_ef 0 30550 0>;
+			duty-cycle = <15270>;
+			times = <8>;
+		};
+		pwm_channel2_conf {
+			pwms = <&pwm_ef 2 30500 0>;
+			duty-cycle = <15250>;
+			times = <12>;
+		};
+	};
+
+	gpu_opp_table: gpu_opp_table {
+		compatible = "operating-points-v2";
+
+		opp-285 {
+			opp-hz = /bits/ 64 <285714281>;
+			opp-microvolt = <1150>;
+		};
+		opp-400 {
+			opp-hz = /bits/ 64 <400000000>;
+			opp-microvolt = <1150>;
+		};
+		opp-500 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-microvolt = <1150>;
+		};
+		opp-666 {
+			opp-hz = /bits/ 64 <666666666>;
+			opp-microvolt = <1150>;
+		};
+		opp-846 {
+			opp-hz = /bits/ 64 <846000000>;
+			opp-microvolt = <1150>;
+		};
+	};
+
+	aml_mkl {
+		compatible = "amlogic,aml_mkl";
+		dev_name = "aml_mkl_dev";
+		status = "okay";
+		reg = <0x0 0xfe440200 0x0 0x80>;
+	};
+
+	chosen {
+		kaslr-seed = <0x0 0x0>;
+	};
 };
 
 &periphs_pinctrl {
@@ -749,6 +1319,7 @@
 			groups = "i2c0_sda_c",
 				"i2c0_scl_c";
 			function = "i2c0";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -758,6 +1329,7 @@
 			groups = "i2c0_sda_h",
 				"i2c0_scl_h";
 			function = "i2c0";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -767,6 +1339,7 @@
 			groups = "i2c0_sda_z0",
 				"i2c0_scl_z1";
 			function = "i2c0";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -776,6 +1349,7 @@
 			groups = "i2c0_sda_z7",
 				"i2c0_scl_z8";
 			function = "i2c0";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 
 		};
@@ -786,6 +1360,7 @@
 			groups = "i2c1_sda_z",
 				"i2c1_scl_z";
 			function = "i2c1";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -795,6 +1370,7 @@
 			groups = "i2c1_sda_x",
 				"i2c1_scl_x";
 			function = "i2c1";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -804,6 +1380,7 @@
 			groups = "i2c1_sda_h2",
 				"i2c1_scl_h3";
 			function = "i2c1";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -813,6 +1390,7 @@
 			groups = "i2c1_sda_h6",
 				"i2c1_scl_h7";
 			function = "i2c1";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -822,6 +1400,7 @@
 			groups = "i2c2_sda_x",
 				"i2c2_scl_x";
 			function = "i2c2";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -831,6 +1410,7 @@
 			groups = "i2c2_sda_z10",
 				"i2c2_scl_z11";
 			function = "i2c2";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -840,6 +1420,7 @@
 			groups = "i2c2_sda_z14",
 				"i2c2_scl_z15";
 			function = "i2c2";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -849,6 +1430,7 @@
 			groups = "i2c3_sda_h",
 				"i2c3_scl_h";
 			function = "i2c3";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -858,6 +1440,7 @@
 			groups = "i2c3_sda_a",
 				"i2c3_scl_a";
 			function = "i2c3";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -867,6 +1450,7 @@
 			groups = "i2c4_sda_d",
 				"i2c4_scl_d";
 			function = "i2c4";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -876,6 +1460,7 @@
 			groups = "i2c4_sda_e",
 				"i2c4_scl_e";
 			function = "i2c4";
+			drive-strength-microamp = <3000>;
 			bias-disable;
 		};
 	};
@@ -946,12 +1531,14 @@
 				 "emmc_cmd";
 			function = "emmc";
 			bias-pull-up;
+			drive-strength-microamp = <4000>;
 		};
 
 		mux-1 {
 			groups = "emmc_clk";
 			function = "emmc";
 			bias-disable;
+			drive-strength-microamp = <4000>;
 		};
 	};
 
@@ -960,6 +1547,7 @@
 			groups = "emmc_nand_dqs";
 			function = "emmc";
 			bias-pull-down;
+			drive-strength-microamp = <4000>;
 		};
 	};
 
@@ -968,6 +1556,7 @@
 			groups = "GPIOB_8";
 			function = "gpio_periphs";
 			bias-pull-down;
+			drive-strength-microamp = <4000>;
 		};
 	};
 
@@ -1015,12 +1604,72 @@
 				 "sdcard_cmd_c";
 			function = "sdcard";
 			bias-pull-up;
+			drive-strength-microamp = <4000>;
 		};
 
 		mux-1 {
 			groups = "sdcard_clk_c";
 			function = "sdcard";
 			bias-pull-up;
+		};
+	};
+
+	ao_to_sd_uart_pins: ao_to_sd_uart_pins {
+		mux {
+			groups = "uart_b_tx_c",
+				"uart_b_rx_c";
+			function = "uart_b";
+			bias-pull-up;
+			input-enable;
+		};
+	};
+
+	ao_uart_pins: ao_uart_pins {
+		mux {
+			groups = "uart_b_tx_d",
+				"uart_b_rx_d";
+			function = "uart_b";
+			bias-pull-up;
+			input-enable;
+		};
+	};
+
+	sd_clr_all_pins: sd_clr_all_pins {
+		mux {
+			groups = "GPIOC_0",
+				   "GPIOC_1",
+				   "GPIOC_2",
+				   "GPIOC_3",
+				   "GPIOC_5";
+			function = "gpio_periphs";
+			output-high;
+		};
+		mux1 {
+			groups = "GPIOC_4";
+			function = "gpio_periphs";
+			output-low;
+		};
+	};
+
+	sd_clr_noall_pins: sd_clr_noall_pins {
+		mux {
+			groups = "GPIOC_0",
+				   "GPIOC_1",
+				   "GPIOC_4",
+				   "GPIOC_5";
+			function = "gpio_periphs";
+			output-high;
+		};
+	};
+
+	sd_1bit_pins: sd_1bit_pins {
+		mux {
+			groups = "sdcard_d0_c",
+				 "sdcard_clk_c",
+				 "sdcard_cmd_c";
+			function = "sdcard";
+			bias-pull-up;
+			drive-strength-microamp = <4000>;
 		};
 	};
 
@@ -1031,6 +1680,7 @@
 //			function = "gpio_periphs";
 			function = "sdcard";
 			bias-pull-down;
+			drive-strength-microamp = <4000>;
 		};
 	};
 
@@ -1043,6 +1693,7 @@
 				 "sdio_cmd_x";
 			function = "sdio";
 			bias-pull-up;
+			drive-strength-microamp = <4000>;
 		};
 
 		mux-1 {
@@ -1057,6 +1708,7 @@
 			groups = "GPIOX_4";
 			function = "gpio_periphs";
 			bias-pull-down;
+			drive-strength-microamp = <4000>;
 		};
 	};
 
@@ -1082,6 +1734,7 @@
 				"hdmitx_sck";
 			function = "hdmitx";
 			bias-disable;
+			drive-strength = <3>;
 		};
 	};
 
@@ -1214,6 +1867,7 @@
 		mux {
 			groups = "pwm_e";
 			function = "pwm_e";
+			drive-strength-microamp = <500>;
 		};
 	};
 
@@ -1316,6 +1970,7 @@
 				 //"spi_a_ss0_x",
 				 "spi_a_sclk_x";
 			function = "spi_a";
+			drive-strength = <2>;
 		};
 	};
 
@@ -1326,6 +1981,7 @@
 				 //"spi_a_ss0_c",
 				 "spi_a_sclk_c";
 			function = "spi_a";
+			drive-strength = <2>;
 		};
 	};
 
@@ -1336,6 +1992,7 @@
 				 //"spi_b_ss0_h",
 				 "spi_b_sclk_h";
 			function = "spi_b";
+			drive-strength = <2>;
 		};
 	};
 
@@ -1472,6 +2129,7 @@
 };
 
 &gpu{
+	operating-points-v2 = <&gpu_opp_table>;
 	reg =   <0 0xFE400000 0 0x04000>, /*mali APB bus base address*/
 		<0 0xFE002000 0 0x01000>, /*reset register*/
 		<0 0xFF800000 0 0x01000>, /*aobus TODO update*/

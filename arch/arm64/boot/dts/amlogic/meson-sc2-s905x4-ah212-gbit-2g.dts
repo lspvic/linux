@@ -31,7 +31,7 @@
 		spi2 = &spicc1;
 	};
 
-	memory {
+	memory@00000000 {
 		device_type = "memory";
 		linux,usable-memory = <0x0 0x000000 0x0 0x80000000>;
 	};
@@ -431,9 +431,23 @@
 	};
 }; /* end of periphs_pinctrl */
 
-&usb {
+&usb0 {
 	status = "okay";
 };
+
+&usb2_phy_v2 {
+	status = "okay";
+	portnum = <2>;
+};
+
+&usb3_phy_v2 {
+	status = "okay";
+	portnum = <1>;
+	otg = <1>;
+	/*gpio-vbus-power = "GPIOH_6";*/
+	/*gpios = <&gpio GPIOH_6 GPIO_ACTIVE_HIGH>;*/
+};
+
 
 /* SDIO */
 &sd_emmc_a {
